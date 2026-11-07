@@ -1,7 +1,6 @@
 import argparse
 import ipaddress
 import json
-import re
 import unicodedata
 from html.parser import HTMLParser
 from pathlib import Path
@@ -98,7 +97,6 @@ def inspect_url(raw_url):
 
     try:
         parsed = urlsplit(candidate)
-        # Accessing .port also validates malformed port numbers.
         port = parsed.port
     except ValueError as error:
         raise ValueError(f"Invalid URL: {error}") from error

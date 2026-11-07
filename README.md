@@ -1,77 +1,62 @@
 # phishing-triage-lab
 
-A small, dependency-free defensive triage project for inspecting URLs and local HTML files, plus hashing and basic file triage. It does **not** visit URLs, execute JavaScript, run samples, decrypt files, delete files, or upload data.
+A small, dependency-free defensive security learning project for Kali Linux and Windows. Run the menu with `python red-blue-tool`. It combines offline phishing/file triage with safe red-team exercise planning and blue-team tabletop guidance.
 
-> Heuristic findings are clues for manual review, not proof that a URL/file is malicious or safe. Do not open suspicious files or submit private URLs/files to public services without authorization.
+> This is a learning aid, not an antivirus or a security verdict. Heuristics can be wrong. Use only systems and files you are authorized to inspect.
 
-## Features
+## What it does
 
-- URL-only checks for unusual characters, punycode/IDN, IP-literal hosts, credentials in URLs, uncommon ports, and suspicious URL terms.
-- Optional static inspection of a **local HTML file** you already have: forms, password fields, external links/scripts, iframes, hidden inputs, and title. HTML is parsed as text; scripts are never executed and no network requests are made.
-- File triage: SHA-256, file size/type guess, and a few text indicators in the first 4 MiB. No files are modified.
-- JSON output for saving reports.
-- Python standard library only; runs on Kali Linux and Windows.
+The interactive menu provides eight options:
 
-## Kali Linux setup
+1. Analyze a URL as text only (no DNS lookup or connection).
+2. Inspect a saved local HTML file as text (no browser, script execution, or resource loading).
+3. Read-only file triage: SHA-256, type guess, and a few indicators in the first 4 MiB.
+4. Calculate a local file's SHA-256.
+5. Create a written red-team exercise scope/authorization checklist; performs no technical testing.
+6. Run a blue-team incident-response tabletop prompt.
+7. Show a defensive hardening checklist.
+8. Export the latest result to JSON.
+
+No network scanning, exploit, payload, credential collection, sample execution, file deletion, or telemetry is included. The project uses only Python's standard library.
+
+## Kali Linux
 
 ```bash
 git clone https://github.com/huynhanonimous-jpg/phishing-triage-lab.git
 cd phishing-triage-lab
 python3 -m venv .venv
 source .venv/bin/activate
+python red-blue-tool
 ```
 
-No third-party packages are required.
+You can also run the individual analyzers:
 
-## Windows PowerShell setup
+```bash
+python phishing_check.py "https://example.com/login"
+python phishing_check.py "https://example.com/login" --html-file ./saved-page.html --json reports/url.json
+python scanner.py ./sample.exe --json reports/file.json
+```
+
+## Windows PowerShell
 
 ```powershell
 git clone https://github.com/huynhanonimous-jpg/phishing-triage-lab.git
 cd phishing-triage-lab
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
+python .\red-blue-tool
 ```
 
-If activation is blocked, invoke Python directly with `\.venv\Scripts\python.exe`.
+If PowerShell blocks venv activation, run `\.venv\Scripts\python.exe .\red-blue-tool` instead.
 
-## Check a URL (no network access)
+## Safe use
 
-```bash
-python phishing_check.py "https://example.com/login?next=%2F"
-```
-
-PowerShell:
-
-```powershell
-python .\phishing_check.py "https://example.com/login?next=%2F"
-```
-
-The URL is analyzed as text only. The tool does not resolve the domain, connect to it, follow redirects, or retrieve its page.
-
-## Inspect a saved HTML file locally
-
-Save the page source through a trusted method, then inspect the local file alongside the URL it claims to represent:
-
-```bash
-python phishing_check.py "https://example.com/login" --html-file ./page-source.html --json reports/url-report.json
-```
-
-Do not open or execute suspicious HTML in a browser to obtain it. The tool only parses a local text file and does not load external resources.
-
-## Triage a file without executing it
-
-```bash
-python scanner.py ./sample.exe --json reports/file-report.json
-```
-
-The file scanner checks a small set of text indicators in at most the first 4 MiB. A lack of indicators does **not** mean the file is safe; this is not an antivirus replacement.
-
-## Safety and privacy
-
-- Use only with URLs/files you are authorized to inspect.
-- This project makes no network requests and sends no telemetry.
-- Reports may contain sensitive URLs, paths, or metadata; review before sharing.
-- Do not automatically delete files based on heuristic scores. Use reputable endpoint protection and backups.
+- Use only with URLs, files, and systems you are authorized to assess.
+- URL inspection is offline and text-only; it does not establish whether a site is safe.
+- HTML is parsed locally; do not open suspicious files in a browser to prepare them.
+- File checks are basic heuristics and are not a replacement for reputable endpoint protection.
+- Do not automatically delete files based on a score. Keep backups and follow your organization's incident process.
+- Reports can contain private URLs or paths; inspect them before sharing.
 
 ## License
 

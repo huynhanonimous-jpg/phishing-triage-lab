@@ -6,7 +6,6 @@ from pathlib import Path
 
 MAX_SAMPLE_BYTES = 4 * 1024 * 1024
 
-# Heuristic indicators are triage clues only and may produce false positives.
 INDICATORS = (
     b"powershell",
     b"cmd.exe",

@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+"""Safe, offline red/blue security learning menu.
+
+This CLI performs local, read-only triage and tabletop planning. It does not
+probe networks, exploit systems, execute samples, or send data anywhere.
+"""
+
+import json
+from pathlib import Path
+
+from phishing_check import inspect_local_html, inspect_url
+from scanner import scan, sha256_file
+
+BANNER = r"""
+         /\_/\\
+        ( o.o )   RED / BLUE TOOL
+         > ^ <    Safe lab edition
+"""
+
+MENU = """
+  1) Check a URL (offline text heuristics)
+  2) Inspect a saved local HTML file (static only)
+  3) Triage a local file (read-only)
+  4) Calculate a file SHA-256
+  5) Red-team exercise planner (scope/authorization checklist only)
+  6) Blue-team incident-response tabletop
+  7) Blue-team security hardening checklist
+  8) Export the latest result as JSON
+  0) Exit
+"""
+
+latest_report = None
+
+
+def print_json(report):
+    print(json.dumps(report, indent=2, ensure_ascii=False))
+
+
+def url_check():
+    global latest_report
+    url = input("URL to inspect (analyzed as text only): ").strip()
+    latest_report = {"url_analysis": inspect_url(url)}
+    print_json(latest_report)
+
+
+def html_check():
+    global latest_report
+    path = input("Path to an existing local HTML file: ").strip().strip('"')
+    context = input("URL represented by that file (context only; not visited): ").strip()
+    url_report = inspect_url(context)
+    html_report = inspect_local_html(path, url_report["normalized_url"])
+    latest_report = {"url_analysis": url_report, "html_analysis": html_report}
+    print_json(latest_report)
+
+
+def file_triage():
+    global latest_report
+    path = Path(input("Path to a local file (will not be executed or changed): ").strip().strip('"'))
+    latest_report = {"file_analysis": scan(path)}
+    print_json(latest_report)
+
+
+def hash_file():
+    global latest_report
+    path = Path(input("Path to a local file: ").strip().strip('"'))
+    if not path.is_file():
+        raise ValueError("Path is not a regular file.")
+    latest_report = {"file": path.name, "sha256": sha256_file(path)}
+    print_json(latest_report)
+
+
+def red_team_planner():
+    """Plan an authorized exercise without performing technical actions."""
+    global latest_report
+    print("\nAuthorized exercise planning only; this tool will not test any system.")
+    plan = {
+        "exercise_type": "tabletop / manually conducted authorized assessment",
+        "scope": input("Systems or lab in scope: ").strip(),
+        "authorization_reference": input("Written authorization / owner: ").strip(),
+        "objective": input("Learning objective: ").strip(),
+        "approved_time_window": input("Approved time window: ").strip(),
+        "stop_condition": input("Stop condition / emergency contact: ").strip(),
+        "checklist": [
+            "Confirm written permission and asset ownership before any activity.",
+            "List in-scope and explicitly out-of-scope assets.",
+            "Agree on a time window, communication channel, and stop procedure.",
+            "Use benign simulations and document observations; do not collect real credentials or data.",
+            "Review findings with the system owner and record remediation actions.",
+        ],
+        "execution": "None. This planner does not scan, connect to, or modify systems.",
+    }
+    latest_report = {"authorized_exercise_plan": plan}
+    print_json(latest_report)
+
+
+def blue_tabletop():
+    global latest_report
+    scenario = input("Tabletop scenario (e.g. suspected account phishing): ").strip()
+    report = {
+        "exercise": "blue-team incident-response tabletop",
+        "scenario": scenario or "A staff member reports a suspicious message.",
+        "discussion_prompts": [
+            "Who receives and validates the report?",
+            "How can the message or indicator be preserved without opening it?",
+            "Which accounts or devices may need protective review by authorized staff?",
+            "Who communicates with affected users and decision-makers?",
+            "What evidence, timeline, and actions should be documented?",
+            "What recovery and follow-up improvements are needed?",
+        ],
+        "note": "Training scenario only; no messages, accounts, or devices are accessed.",
+    }
+    latest_report = {"blue_team_tabletop": report}
+    print_json(latest_report)
+
+
+def hardening_checklist():
+    global latest_report
+    report = {
+        "blue_team_baseline": [
+            "Enable automatic security updates and supported endpoint protection.",
+            "Use unique passwords with a password manager and enable MFA.",
+            "Keep offline or versioned backups and periodically test restoration.",
+            "Use least privilege; avoid daily work from administrator accounts.",
+            "Train users to report suspicious links and verify requests through another channel.",
+            "Review account sign-ins and security alerts using approved admin tools.",
+            "Document incident contacts, escalation steps, and recovery priorities.",
+        ],
+        "note": "General defensive guidance; adapt to your environment and policies.",
+    }
+    latest_report = {"defensive_checklist": report}
+    print_json(latest_report)
+
+
+def export_report():
+    if latest_report is None:
+        print("No result yet. Run one of the menu tools first.")
+        return
+    destination = Path(input("Output JSON path (e.g. reports/latest.json): ").strip().strip('"'))
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(latest_report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"Saved report to {destination}")
+
+
+def main():
+    actions = {
+        "1": url_check,
+        "2": html_check,
+        "3": file_triage,
+        "4": hash_file,
+        "5": red_team_planner,
+        "6": blue_tabletop,
+        "7": hardening_checklist,
+        "8": export_report,
+    }
+    print(BANNER)
+    print("Offline defensive triage + safe exercise planning. No network probing or payloads.")
+    while True:
+        print(MENU)
+        choice = input("Choose an option: ").strip()
+        if choice == "0":
+            print("Bye! Stay within authorized lab scope.")
+            return
+        action = actions.get(choice)
+        if action is None:
+            print("Unknown option; choose 0-8.")
+            continue
+        try:
+            action()
+        except (OSError, ValueError) as error:
+            print(f"Could not complete that action: {error}")
+        input("\nPress Enter to return to the menu...")
+
+
+if __name__ == "__main__":
+    main()
