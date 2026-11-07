@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Safe, offline red/blue security learning menu.
 
-This CLI performs local, read-only triage and tabletop planning. It does not
-probe networks, exploit systems, execute samples, or send data anywhere.
+This CLI performs local, read-only triage and defensive planning. It does not
+probe networks, test live services, exploit systems, execute samples, or send data.
 """
 
 import json
@@ -33,6 +33,9 @@ MENU = """
   6) Blue-team incident-response tabletop
   7) Blue-team hardening checklist
   8) Export the latest result as JSON
+  9) Internal web security review checklist (manual, authorized)
+ 10) Wi-Fi security hardening checklist (defensive)
+ 11) Vulnerability remediation worksheet
   0) Exit
 """
 
@@ -78,20 +81,21 @@ def run_hash_file():
 
 def run_red_team_planner():
     global latest_report
-    print("\nAuthorized exercise planning only; this tool will not test any system.")
+    print("\nPlanning only. Obtain written authorization before any assessment.")
     plan = {
-        "exercise_type": "tabletop / manual authorized assessment",
-        "scope": input("Systems or lab in scope: ").strip(),
+        "exercise_type": "authorized assessment planning",
+        "scope": input("Explicitly authorized assets (avoid secrets): ").strip(),
         "authorization_reference": input("Written authorization / owner: ").strip(),
         "objective": input("Learning objective: ").strip(),
         "approved_time_window": input("Approved time window: ").strip(),
         "stop_condition": input("Stop condition / emergency contact: ").strip(),
         "checklist": [
-            "Confirm written permission and asset ownership before any activity.",
-            "List in-scope and explicitly out-of-scope assets.",
-            "Agree on the time window, channel, and stop procedure.",
-            "Use benign simulations and record observations without collecting real data.",
-            "Review findings with the system owner and document remediation steps.",
+            "Confirm written permission, asset ownership, and an approved scope.",
+            "List in-scope and explicitly out-of-scope systems.",
+            "Agree on timing, communications, data handling, and stop procedure.",
+            "Prefer tabletop exercises and vendor-approved, non-destructive validation.",
+            "Do not collect real credentials, access third-party systems, or disrupt services.",
+            "Share observations with the owner and track remediation to closure.",
         ],
         "execution": "None. This planner does not connect to, scan, or modify systems.",
     }
@@ -133,7 +137,71 @@ def run_hardening_checklist():
         ],
         "note": "General defensive guidance; adapt to your environment and policies.",
     }
-    latest_report = {"defensive_checklist": report}
+    latest_report = {"blue_team_baseline": report}
+    show_json(latest_report)
+
+
+def run_internal_web_review():
+    global latest_report
+    system = input("Owned internal web app/service name (do not enter credentials): ").strip()
+    report = {
+        "review_type": "manual defensive web security review",
+        "asset": system,
+        "authorization_reminder": "Review only systems you own or have explicit written permission to assess.",
+        "checklist": [
+            "Confirm asset owner, approved scope, test window, and a rollback/contact plan.",
+            "Check supported software versions and apply vendor security updates.",
+            "Review TLS certificate validity and HTTPS-only configuration in approved admin tooling.",
+            "Review security headers and cookie flags (Secure, HttpOnly, SameSite) from configuration or trusted logs.",
+            "Verify authentication, MFA, account recovery, and least-privilege access policies.",
+            "Review input validation and access-control design with code review and non-production tests.",
+            "Check that secrets are not stored in source code, client-side assets, or logs.",
+            "Review backups, logging, alerting, dependency inventory, and incident-response ownership.",
+            "Record evidence safely, assign a remediation owner, and retest after fixes using approved procedures.",
+        ],
+        "limits": "This option does not connect to the service, crawl it, submit inputs, or run vulnerability tests.",
+    }
+    latest_report = {"internal_web_review": report}
+    show_json(latest_report)
+
+
+def run_wifi_hardening():
+    global latest_report
+    network = input("Wi-Fi network label for your notes (no password): ").strip()
+    report = {
+        "review_type": "defensive Wi-Fi configuration checklist",
+        "network_label": network,
+        "checklist": [
+            "Use WPA3-Personal where supported, otherwise WPA2-AES; avoid WEP and legacy TKIP.",
+            "Set a long, unique Wi-Fi passphrase and change default router administrator credentials.",
+            "Update router firmware from the manufacturer and disable remote administration unless required.",
+            "Disable WPS if it is not needed; use a guest network for visitors and untrusted devices.",
+            "Use a separate network or VLAN for IoT devices where available.",
+            "Review connected-device lists in the router's own admin interface and remove unknown devices after verification.",
+            "Use the router vendor's supported security settings; avoid sharing passwords in reports.",
+            "For enterprise Wi-Fi, have the network owner review 802.1X/RADIUS configuration and certificate validation.",
+        ],
+        "limits": "No wireless discovery, packet capture, deauthentication, password testing, or connection attempts are performed.",
+    }
+    latest_report = {"wifi_hardening": report}
+    show_json(latest_report)
+
+
+def run_remediation_worksheet():
+    global latest_report
+    report = {
+        "finding_id": input("Finding/ticket ID: ").strip(),
+        "asset_owner": input("Authorized asset owner/team: ").strip(),
+        "summary": input("Brief issue summary (no secrets): ").strip(),
+        "impact": input("Business impact: ").strip(),
+        "remediation": input("Planned fix or mitigation: ").strip(),
+        "responsible_owner": input("Person/team responsible for the fix: ").strip(),
+        "target_date": input("Target date: ").strip(),
+        "validation_plan": input("Safe validation plan after the fix: ").strip(),
+        "status": "Open - track through the organization's approved process",
+        "note": "Do not include credentials, personal data, or sensitive exploit details in this report.",
+    }
+    latest_report = {"remediation_worksheet": report}
     show_json(latest_report)
 
 
@@ -157,10 +225,13 @@ def main():
         "6": run_blue_tabletop,
         "7": run_hardening_checklist,
         "8": export_report,
+        "9": run_internal_web_review,
+        "10": run_wifi_hardening,
+        "11": run_remediation_worksheet,
     }
 
     print(BANNER)
-    print("Offline defensive triage + safe exercise planning. No payloads or live exploitation.")
+    print("Offline defensive triage + safe exercise planning. No live probing or payloads.")
 
     while True:
         print(MENU)
@@ -171,7 +242,7 @@ def main():
 
         action = actions.get(choice)
         if action is None:
-            print("Unknown option; choose 0-8.")
+            print("Unknown option; choose 0-11.")
             continue
 
         try:
