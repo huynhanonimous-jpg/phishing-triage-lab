@@ -1,25 +1,37 @@
 # phishing-triage-lab
 
-A small, dependency-free defensive security learning project for Kali Linux and Windows. Run the menu with `python red-blue-tool`. It combines offline phishing/file triage with safe red-team exercise planning and blue-team tabletop guidance.
+<p align="center">
+  <img alt="shield logo" src="https://img.shields.io/badge/🛡️-offline%20triage-0F172A?style=for-the-badge&labelColor=111827&color=38bdf8" />
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" />
+  <img alt="License" src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
+</p>
 
-> This is a learning aid, not an antivirus or a security verdict. Heuristics can be wrong. Use only systems and files you are authorized to inspect.
+Safe, offline defensive security tooling for authorized lab use. This project helps with:
 
-## What it does
+- URL triage using text-only heuristics
+- static inspection of local HTML files
+- read-only file triage and SHA-256 hashing
+- red-team exercise planning without live testing
+- blue-team tabletop and hardening guidance
 
-The interactive menu provides eight options:
+> This project is for learning, research, and defensive training only. It does not execute suspicious files, visit URLs, exfiltrate data, or delete files.
 
-1. Analyze a URL as text only (no DNS lookup or connection).
-2. Inspect a saved local HTML file as text (no browser, script execution, or resource loading).
-3. Read-only file triage: SHA-256, type guess, and a few indicators in the first 4 MiB.
-4. Calculate a local file's SHA-256.
-5. Create a written red-team exercise scope/authorization checklist; performs no technical testing.
-6. Run a blue-team incident-response tabletop prompt.
-7. Show a defensive hardening checklist.
-8. Export the latest result to JSON.
+## Project goals
 
-No network scanning, exploit, payload, credential collection, sample execution, file deletion, or telemetry is included. The project uses only Python's standard library.
+- Keep analysis fully offline and local.
+- Favor static inspection over execution.
+- Produce heuristic findings that must be reviewed manually.
+- Support safe red/blue lab workflows without live exploitation.
 
-## Kali Linux
+## Included tools
+
+- `red-blue-tool`: interactive menu for URL, HTML, file, hash, planning, and security guidance.
+- `phishing_check.py`: static URL and saved-HTML inspection.
+- `scanner.py`: read-only file triage for suspicious local files.
+
+## Quick start
+
+### Kali Linux
 
 ```bash
 git clone https://github.com/huynhanonimous-jpg/phishing-triage-lab.git
@@ -29,15 +41,7 @@ source .venv/bin/activate
 python red-blue-tool
 ```
 
-You can also run the individual analyzers:
-
-```bash
-python phishing_check.py "https://example.com/login"
-python phishing_check.py "https://example.com/login" --html-file ./saved-page.html --json reports/url.json
-python scanner.py ./sample.exe --json reports/file.json
-```
-
-## Windows PowerShell
+### Windows PowerShell
 
 ```powershell
 git clone https://github.com/huynhanonimous-jpg/phishing-triage-lab.git
@@ -47,16 +51,40 @@ py -m venv .venv
 python .\red-blue-tool
 ```
 
-If PowerShell blocks venv activation, run `\.venv\Scripts\python.exe .\red-blue-tool` instead.
+If PowerShell blocks activation, run:
 
-## Safe use
+```powershell
+.\.venv\Scripts\python.exe .\red-blue-tool
+```
 
-- Use only with URLs, files, and systems you are authorized to assess.
-- URL inspection is offline and text-only; it does not establish whether a site is safe.
-- HTML is parsed locally; do not open suspicious files in a browser to prepare them.
-- File checks are basic heuristics and are not a replacement for reputable endpoint protection.
-- Do not automatically delete files based on a score. Keep backups and follow your organization's incident process.
-- Reports can contain private URLs or paths; inspect them before sharing.
+## Example commands
+
+```bash
+python phishing_check.py "https://example.com/login"
+python phishing_check.py "https://example.com/login" --html-file ./saved-page.html --json reports/url-report.json
+python scanner.py ./sample.exe --json reports/file-report.json
+```
+
+## Safety notes
+
+- Only inspect URLs/files that you are authorized to review.
+- The tool does not resolve domains, open browser windows, execute scripts, or send telemetry.
+- HTML analysis is static and text-only.
+- File triage is heuristic and not a replacement for antivirus or incident response tooling.
+- Do not automatically delete files based on the score; keep backups and follow your organization's policies.
+
+## Menu options
+
+The CLI menu includes:
+
+1. URL check (offline heuristics)
+2. Local HTML inspection
+3. Local file triage
+4. SHA-256 hash calculation
+5. Red-team exercise planner (written scope only)
+6. Blue-team tabletop exercise
+7. Defensive hardening checklist
+8. Export the last result as JSON
 
 ## License
 
